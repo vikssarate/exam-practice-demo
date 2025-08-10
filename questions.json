@@ -147,6 +147,21 @@
     "All of these"
   ],
   "answer": 1
+},
+      {
+  "id": "q_udl_max_M",
+  "tag": "Tech",
+  "type": "mcq_single",
+  "text": "<p>For the simply supported beam with uniform load <em>w</em> over span <em>L</em> shown, what is the <b>maximum bending moment</b>?</p><img src='images/beam_udl.png' alt='Simply supported beam with UDL' style='max-width:100%;height:auto;'>",
+  "options": [
+    "wL<sup>2</sup>/8",
+    "wL<sup>2</sup>/12",
+    "wL<sup>2</sup>/16",
+    "wL<sup>2</sup>/10"
+  ],
+  "answer": 0,
+  "marks": 2,
+  "explanation": "For a simply supported beam carrying a UDL w over the full span L, the maximum bending moment occurs at midspan: M_max = wL^2/8."
 }
     ]
   }
