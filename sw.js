@@ -1,5 +1,5 @@
 // sw (v1) for exam practice demo
-const CACHE = 'exam-practice-v5';
+const CACHE = 'exam-practice-v6';
 self.addEventListener('install', e => {
     self.skipWaiting();
     e.waitUntil(
