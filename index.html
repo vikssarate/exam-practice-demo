@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Exam Practice Demo</title>
+<style>
+:root{--bg:#f6f9ff;--card:#fff;--muted:#66768a;--text:#0f172a;--border:#e6eef7;--accent:#1565c0;--bad:#c62828;--good:#1b5e20;--shadow:0 8px 24px rgba(0,0,0,.08);--radius:14px}
+@media (prefers-color-scheme: dark){:root{--bg:#0b0f14;--card:#121923;--muted:#9fb1c7;--text:#eaf2ff;--border:#1f2a3a;--accent:#5ab0ff;--bad:#ff5a5f;--good:#2ecc71;--shadow:0 10px 30px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+.wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
+header{position:sticky;top:0;background:color-mix(in oklab, var(--bg) 85%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);z-index:10}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:20px;margin:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);cursor:pointer}
+button.primary{background:var(--accent);color:#fff;font-weight:700;border-color:color-mix(in oklab, var(--accent), black 10%)}
+button.ghost{background:transparent;box-shadow:none}
+.grid{display:grid;gap:14px}
+@media(min-width:1000px){.grid{grid-template-columns:2fr 1fr}}
+.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:6px;background:color-mix(in oklab, var(--card), white 3%)}
+.muted{color:var(--muted);font-size:12px}
+.q{font-weight:700;margin:0 0 8px 0}
+.options{display:grid;gap:8px}
+.opt{border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer}
+.opt.selected{outline:2px solid var(--accent)}
+.palette{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.pbtn{padding:8px;border-radius:8px;border:1px solid var(--border);text-align:center;cursor:pointer}
+.pbtn.answered{background:color-mix(in oklab, var(--good), white 80%)}
+.pbtn.marked{background:color-mix(in oklab, var(--accent), white 80%)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{padding:4px 8px;border-radius:999px;background:color-mix(in oklab, var(--accent), white 15%);color:#fff;font-size:12px}
+.timer{font-weight:800}
+.result{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+@media(max-width:700px){.result{grid-template-columns:1fr}}
+.review.correct{border-left:6px solid var(--good)}
+.review.wrong{border-left:6px solid var(--bad)}
+footer{padding:12px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap topbar">
+    <h1>📝 Exam Practice Demo</h1>
+    <div>
+      <span class="badge timer" id="timer">--:--:--</span>
+      <button id="installBtn" class="ghost">Install</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap grid">
+  <section class="card">
+    <div id="screen-intro">
+      <h2>Select a Test</h2>
+      <div id="tests"></div>
+      <p class="muted">Features: timer, negative marking, mark for review, palette, autosave, results, review, export. Works offline.</p>
+    </div>
+
+    <div id="screen-test" style="display:none">
+      <div class="row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><span class="badge" id="testTitle"></span></div>
+        <div class="muted">Remaining: <b id="remain"></b></div>
+      </div>
+      <div class="q" id="questionText"></div>
+      <div class="options" id="options"></div>
+
+      <div class="controls">
+        <button id="clearBtn">Clear</button>
+        <button id="markBtn">Mark for Review</button>
+        <button id="prevBtn">Prev</button>
+        <button id="nextBtn">Save & Next</button>
+        <button id="submitBtn" class="primary">Submit</button>
+      </div>
+
+      <h3>Question Palette</h3>
+      <div class="palette" id="palette"></div>
+    </div>
+
+    <div id="screen-result" style="display:none">
+      <h2>Result</h2>
+      <div class="result">
+        <div class="card">
+          <div><b>Score:</b> <span id="score"></span></div>
+          <div><b>Correct:</b> <span id="correct"></span></div>
+          <div><b>Wrong:</b> <span id="wrong"></span></div>
+          <div><b>Unattempted:</b> <span id="unattempted"></span></div>
+          <div><b>Accuracy:</b> <span id="accuracy"></span></div>
+          <div><b>Time taken:</b> <span id="timeTaken"></span></div>
+        </div>
+        <div class="card">
+          <button id="exportBtn">Export Result JSON</button>
+          <button id="reviewBtn" class="primary">Review Answers</button>
+          <button id="backBtn">Back to Tests</button>
+        </div>
+      </div>
+      <div id="review" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <aside class="card">
+    <h3>Test Info</h3>
+    <div id="meta"></div>
+  </aside>
+</main>
+
+<footer>Install via Share → Add to Home Screen • Works offline</footer>
+
+<script>
+let tests = [];
+let current = null;
+let startTs = null;
+let remainSec = 0;
+let swDeferPrompt = null;
+
+function $(id){return document.getElementById(id)}
+
+async function loadTests(){
+  const res = await fetch('questions.json'); tests = await res.json();
+  const box = $('tests'); box.innerHTML='';
+  tests.forEach((t,idx)=>{
+    const btn=document.createElement('button');
+    btn.textContent = `${t.title} — ${t.duration} min — ${t.questions.length} Q`;
+    btn.onclick = ()=> startTest(idx);
+    box.appendChild(btn);
+  });
+}
+
+function fmt(sec){ const h=Math.floor(sec/3600); const m=Math.floor((sec%3600)/60); const s=sec%60; return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':'); }
+
+function startTest(i){
+  current = JSON.parse(JSON.stringify(tests[i])); // deep copy
+  current.index = 0;
+  current.answers = new Array(current.questions.length).fill(null);
+  current.marked = new Array(current.questions.length).fill(false);
+  startTs = Date.now();
+  remainSec = current.duration*60;
+  $('testTitle').textContent = current.title;
+  $('meta').innerHTML = `<div><b>Negative Marking:</b> ${current.negative>0? '-'+current.negative: 'No'}</div>
+  <div><b>Marks / correct:</b> ${current.marks}</div>`;
+  show('screen-intro', false); show('screen-result', false); show('screen-test', true);
+  tick();
+  renderQ();
+  renderPalette();
+}
+
+function show(id, yes){ $(id).style.display = yes? '' : 'none'; }
+
+function tick(){
+  $('timer').textContent = fmt(remainSec);
+  $('remain').textContent = fmt(remainSec);
+  if (remainSec<=0){ submitTest(); return; }
+  remainSec--; setTimeout(tick, 1000);
+}
+
+function renderQ(){
+  const q = current.questions[current.index];
+  $('questionText').textContent = `Q${current.index+1}. ${q.text}`;
+  const box = $('options'); box.innerHTML='';
+  q.options.forEach((opt,oi)=>{
+    const div=document.createElement('div'); div.className='opt'+(current.answers[current.index]===oi?' selected':'');
+    div.textContent = opt;
+    div.onclick=()=>{ current.answers[current.index]=oi; renderQ(); renderPalette(); };
+    box.appendChild(div);
+  });
+}
+
+function renderPalette(){
+  const p = $('palette'); p.innerHTML='';
+  current.questions.forEach((_,i)=>{
+    const b=document.createElement('div'); b.className='pbtn';
+    if(current.answers[i]!=null) b.classList.add('answered');
+    if(current.marked[i]) b.classList.add('marked');
+    b.textContent = i+1; b.onclick=()=>{ current.index=i; renderQ(); };
+    p.appendChild(b);
+  });
+}
+
+$('clearBtn').onclick=()=>{ current.answers[current.index]=null; renderQ(); renderPalette(); };
+$('markBtn').onclick=()=>{ current.marked[current.index]=!current.marked[current.index]; renderPalette(); };
+$('prevBtn').onclick=()=>{ if(current.index>0){ current.index--; renderQ(); } };
+$('nextBtn').onclick=()=>{ if(current.index<current.questions.length-1){ current.index++; renderQ(); } };
+$('submitBtn').onclick=()=>{ if(confirm('Submit the test?')) submitTest(); };
+
+function submitTest(){
+  // compute results
+  let correct=0, wrong=0, unattempted=0, score=0;
+  current.questions.forEach((q,i)=>{
+    const a=current.answers[i];
+    if(a==null) unattempted++;
+    else if(a===q.answer){ correct++; score += current.marks; }
+    else { wrong++; score -= current.negative||0; }
+  });
+  const takenSec = current.duration*60 - remainSec;
+  $('score').textContent = score.toFixed(2);
+  $('correct').textContent = correct;
+  $('wrong').textContent = wrong;
+  $('unattempted').textContent = unattempted;
+  $('accuracy').textContent = (correct/ (current.questions.length - unattempted || 1) * 100).toFixed(1) + '%';
+  $('timeTaken').textContent = fmt(takenSec);
+  buildReview();
+  show('screen-test', false); show('screen-intro', false); show('screen-result', true);
+}
+
+function buildReview(){
+  const box=$('review'); box.innerHTML=''; 
+  current.questions.forEach((q,i)=>{
+    const div=document.createElement('div'); 
+    const a=current.answers[i];
+    const ok = a===q.answer;
+    div.className='card review '+(a==null?'': ok?'correct':'wrong');
+    div.innerHTML = `<div class="q">Q${i+1}. ${q.text}</div>
+      <div><b>Your answer:</b> ${a==null?'<span class="muted">Not answered</span>': q.options[a]}</div>
+      <div><b>Correct answer:</b> ${q.options[q.answer]}</div>
+      ${q.explain? `<div class="muted">${q.explain}</div>`:''}`;
+    box.appendChild(div);
+  });
+}
+
+$('exportBtn').onclick=()=>{
+  const payload = {title: current.title, answers: current.answers, marked: current.marked, started: new Date(startTs).toISOString()};
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='result.json'; a.click(); URL.revokeObjectURL(url);
+};
+$('backBtn').onclick=()=>{ show('screen-result', false); show('screen-intro', true); };
+$('reviewBtn').onclick=()=>{ document.getElementById('review').scrollIntoView({behavior:'smooth'}); }
+
+window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); swDeferPrompt=e; $('installBtn').onclick=()=> swDeferPrompt && swDeferPrompt.prompt(); });
+
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js')); }
+loadTests();
+</script>
+</body>
+</html>

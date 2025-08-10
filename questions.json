@@ -1,0 +1,113 @@
+[
+  {
+    "title": "Demo Test 1 (General)",
+    "duration": 30,
+    "marks": 1,
+    "negative": 0.25,
+    "questions": [
+      {
+        "text": "Which is the smallest prime number?",
+        "options": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "answer": 2,
+        "explain": "2 is the only even prime."
+      },
+      {
+        "text": "Who wrote the Indian Constitution's preamble?",
+        "options": [
+          "Jawaharlal Nehru",
+          "B.R. Ambedkar",
+          "Sardar Patel",
+          "Rajendra Prasad"
+        ],
+        "answer": 0,
+        "explain": "The Objectives Resolution by Nehru inspired the Preamble."
+      },
+      {
+        "text": "Force = ?",
+        "options": [
+          "m/v",
+          "m+a",
+          "m\u00d7a",
+          "v/a"
+        ],
+        "answer": 2,
+        "explain": "Newton's Second Law: F = m \u00d7 a."
+      },
+      {
+        "text": "Which gas is most abundant in Earth's atmosphere?",
+        "options": [
+          "Oxygen",
+          "Nitrogen",
+          "Carbon Dioxide",
+          "Argon"
+        ],
+        "answer": 1
+      },
+      {
+        "text": "GCF of 12 and 18 is",
+        "options": [
+          "2",
+          "3",
+          "4",
+          "6"
+        ],
+        "answer": 3
+      },
+      {
+        "text": "ATP is produced in?",
+        "options": [
+          "Mitochondria",
+          "Nucleus",
+          "Ribosome",
+          "Lysosome"
+        ],
+        "answer": 0
+      },
+      {
+        "text": "Capital of Maharashtra?",
+        "options": [
+          "Pune",
+          "Nagpur",
+          "Mumbai",
+          "Nashik"
+        ],
+        "answer": 2
+      },
+      {
+        "text": "Which one is non-metal?",
+        "options": [
+          "Sodium",
+          "Calcium",
+          "Aluminium",
+          "Sulphur"
+        ],
+        "answer": 3
+      },
+      {
+        "text": "SI unit of power?",
+        "options": [
+          "Joule",
+          "Watt",
+          "Newton",
+          "Pascal"
+        ],
+        "answer": 1
+      },
+      {
+        "text": "Median of {3,5,7}?",
+        "options": [
+          "3",
+          "5",
+          "7",
+          "6"
+        ],
+        "answer": 1
+      }
+    ]
+  }
+]
