@@ -1,9 +1,10 @@
-[
-  {
-    "title": "Demo Test 1 (General)",
-    "duration": 30,
-    "marks": 1,
-    "negative": 0.25,
+{
+  "tests": [
+    {
+      "id": "demo1",
+      "title": "Demo Test 1 (General)",
+      "durationMinutes": 30,
+      "negative": 0.25,
     "questions": [
       {
         "text": "Which is the smallest prime number?",
@@ -166,3 +167,4 @@
     ]
   }
 ]
+}
