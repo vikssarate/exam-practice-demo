@@ -107,7 +107,46 @@
           "6"
         ],
         "answer": 1
-      }
+      },{
+  "text": "In a man, the abducens nerve is injured. Which function will be most affected?",
+  "options": [
+    "Movement of the eyeball",
+    "Movement of the tongue",
+    "Swallowing",
+    "Movement of the neck"
+  ],
+  "answer": 0
+},
+{
+  "text": "Injury to vagus nerve in humans is least likely to affect:",
+  "options": [
+    "Tongue movements",
+    "Gastrointestinal movements",
+    "Pancreatic secretion",
+    "Cardiac movements"
+  ],
+  "answer": 0
+},
+{
+  "text": "Which cranial nerve has the highest number of branches?",
+  "options": [
+    "Vagus nerve",
+    "Trigeminal nerve",
+    "Facial nerve",
+    "None of these"
+  ],
+  "answer": 1
+},
+{
+  "text": "Sympathetic nervous system induces:",
+  "options": [
+    "Secretion of digestive juices",
+    "Increase in heart beat",
+    "Secretion of saliva",
+    "All of these"
+  ],
+  "answer": 1
+}
     ]
   }
 ]
