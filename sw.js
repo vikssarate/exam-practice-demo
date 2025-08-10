@@ -6,7 +6,7 @@ self.addEventListener('install', e => {
         caches.open(CACHE).then(c => c.addAll([
             './',
             './index.html',
-            './questions.json',
+            './questions.json?v=img9',
             './images/beam_udl.png'  // ✅ Add your image path here
         ]))
     );
