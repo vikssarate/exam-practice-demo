@@ -1,5 +1,5 @@
 // sw (v1) for exam practice demo
-const CACHE = 'exam-practice-v12'; // 🔹 Bump version to v10 so old cache is replaced
+const CACHE = 'exam-practice-v16'; // 🔹 Bump version to v10 so old cache is replaced
 
 self.addEventListener('install', e => {
     self.skipWaiting();
