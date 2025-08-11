@@ -215,6 +215,9 @@ function startTest(t) {
   examArea.style.display = 'block';
 
   testTitle.textContent = t.title;
+  state.section = 'All';
+buildSectionIndexMap();
+renderSectionTabs();
   info.innerHTML = `<p><b>Negative Marking:</b> -${t.negative}</p>
                     <p><b>Marks / correct:</b> 1 (or per question)</p>`;
 
@@ -222,8 +225,6 @@ function startTest(t) {
   clearInterval(state.timer);
   state.timer = setInterval(tickTimer, 1000);
 
-  buildSectionIndexMap();    // NEW
-  renderSectionTabs();       // NEW
   renderQuestion();
   renderPalette();
 }
@@ -239,34 +240,63 @@ function tickTimer(){
 function currentQuestion(){ return state.activeTest.questions[state.idx]; }
 
 /* ========= Renderers ========= */
+    /* ========= Renderers ========= */
 function renderQuestion(){
   const q = currentQuestion();
-  qHead.textContent = `Q${state.idx+1}.`;      // keep global numbering
-  qText.innerHTML = q.text;                    // allow <img>, <sup>, etc.
 
+  // Heading and rich HTML body (supports <img>, <sup>, etc.)
+  qHead.textContent = `Q${state.idx + 1}.`;
+  qText.innerHTML = q.text;
+
+  // Render options (store answers by q.id if present, else by index)
   optWrap.innerHTML = '';
-  q.options.forEach((opt,i)=>{
+  const key = q.id ?? state.idx;
+
+  q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'opt';
     btn.type = 'button';
-    btn.innerHTML = opt;                       // render option as HTML too
-    if (state.answers[q.id] === i) btn.classList.add('selected');
-    btn.onclick = () => { state.answers[q.id] = i; renderQuestion(); renderPalette(); };
+    btn.innerHTML = opt;                 // allow HTML in options
+
+    // highlight selection
+    if (state.answers[key] === i) btn.classList.add('selected');
+
+    // save answer and re-render
+    btn.onclick = () => {
+      state.answers[key] = i;
+      renderQuestion();                  // refresh selected state
+      renderPalette();                   // keep palette in sync
+    };
+
     optWrap.appendChild(btn);
   });
 }
 
 function renderPalette(){
-  // Palette shows only questions in current section
+  const list = state.activeTest.questions;
   palette.innerHTML = '';
-  state.sectionIndexMap.forEach((globalIdx) => {
-    const q = state.activeTest.questions[globalIdx];
+
+  list.forEach((q, i) => {
     const b = document.createElement('button');
-    b.textContent = globalIdx + 1;             // show global number
-    const answered = state.answers[q.id] != null;
+    b.textContent = i + 1;
+
+    // use q.id if present, otherwise fall back to index
+    const key = q.id ?? i;
+
+    // answered highlight
+    const answered = state.answers[key] != null;
     if (answered) b.style.background = 'rgba(21,101,192,.15)';
-    if (state.review[q.id]) b.style.outline = '2px solid #f59e0b';
-    b.onclick = () => { state.idx = globalIdx; renderQuestion(); renderSectionTabs(); };
+
+    // dim buttons not in the active section
+    const inFilter = state.section === 'All' || q.section === state.section;
+    b.style.opacity = inFilter ? 1 : 0.35;
+
+    b.onclick = () => { 
+      state.idx = i; 
+      renderQuestion(); 
+      renderSectionTabs(); // refresh section tabs if needed
+    };
+
     palette.appendChild(b);
   });
 }
@@ -274,21 +304,30 @@ function renderPalette(){
 /* ========= Controls ========= */
 $('#prevBtn').onclick = () => {
   const pos = state.sectionIndexMap.indexOf(state.idx);
-  if (pos > 0) { state.idx = state.sectionIndexMap[pos - 1]; renderQuestion(); renderSectionTabs(); }
+  if (pos > 0) {
+    state.idx = state.sectionIndexMap[pos - 1];
+    renderQuestion();
+  }
 };
+
 $('#nextBtn').onclick = () => {
   const pos = state.sectionIndexMap.indexOf(state.idx);
   if (pos < state.sectionIndexMap.length - 1) {
     state.idx = state.sectionIndexMap[pos + 1];
-    renderQuestion(); renderSectionTabs();
+    renderQuestion();
   }
 };
 $('#clearBtn').onclick = () => {
-  const q = currentQuestion(); delete state.answers[q.id];
-  renderQuestion(); renderPalette();
+  const q = currentQuestion();
+  const key = q.id ?? state.idx;
+  delete state.answers[key];
+  renderQuestion();
+  renderPalette();
 };
 $('#markBtn').onclick = () => {
-  const q = currentQuestion(); state.review[q.id] = !state.review[q.id];
+  const q = currentQuestion();
+  const key = q.id ?? state.idx;
+  state.review[key] = !state.review[key];
   renderPalette();
 };
 $('#submitBtn').onclick = () => submitTest();
