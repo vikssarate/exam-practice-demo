@@ -309,8 +309,6 @@
 {
   "section": "Diagram–Curve",
 
-  "tag": "Tech",
-  "type": "mcq_single",
   "text": "<p>For the simply supported beam with point load W at midspan over span L shown:</p><img src='images/Vu_m.png' alt='beam diagram' style='max-width:100%; height:auto;'>",
   "options": ["a", "b", "c", "d"],
   "answer": 1,
