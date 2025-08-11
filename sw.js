@@ -7,7 +7,7 @@ self.addEventListener('install', e => {
         caches.open(CACHE).then(c => c.addAll([
             './',
             './index.html',
-            './questions.json?v=img10', // 🔹 Also bump query param to force reload of JSON
+            './questions.json?v=img18', // 🔹 Also bump query param to force reload of JSON
             './images/beam_udl.png'     // ✅ Add your image path here
         ]))
     );
