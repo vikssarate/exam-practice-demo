@@ -230,6 +230,15 @@ function renderQuestion(){
   qHead.textContent=`Q${state.idx+1}.`;
   qText.innerHTML=q.text;
 
+// NEW: show optional figure
+if (q.image) {
+    const img = document.createElement('img');
+    img.src = q.image;
+    img.alt = 'figure';
+    img.loading = 'lazy';
+    qText.appendChild(img);
+}
+
   // Options (store by q.id if present)
   optWrap.innerHTML='';
   const key=q.id ?? state.idx;
