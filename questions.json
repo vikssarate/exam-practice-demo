@@ -5,166 +5,106 @@
       "title": "Demo Test 1 (General)",
       "durationMinutes": 30,
       "negative": 0.25,
-    "questions": [
-      {
-        "text": "Which is the smallest prime number?",
-        "options": [
-          "0",
-          "1",
-          "2",
-          "3"
-        ],
-        "answer": 2,
-        "explain": "2 is the only even prime."
-      },
-      {
-        "text": "Who wrote the Indian Constitution's preamble?",
-        "options": [
-          "Jawaharlal Nehru",
-          "B.R. Ambedkar",
-          "Sardar Patel",
-          "Rajendra Prasad"
-        ],
-        "answer": 0,
-        "explain": "The Objectives Resolution by Nehru inspired the Preamble."
-      },
-      {
-        "text": "Force = ?",
-        "options": [
-          "m/v",
-          "m+a",
-          "m\u00d7a",
-          "v/a"
-        ],
-        "answer": 2,
-        "explain": "Newton's Second Law: F = m \u00d7 a."
-      },
-      {
-        "text": "Which gas is most abundant in Earth's atmosphere?",
-        "options": [
-          "Oxygen",
-          "Nitrogen",
-          "Carbon Dioxide",
-          "Argon"
-        ],
-        "answer": 1
-      },
-      {
-        "text": "GCF of 12 and 18 is",
-        "options": [
-          "2",
-          "3",
-          "4",
-          "6"
-        ],
-        "answer": 3
-      },
-      {
-        "text": "ATP is produced in?",
-        "options": [
-          "Mitochondria",
-          "Nucleus",
-          "Ribosome",
-          "Lysosome"
-        ],
-        "answer": 0
-      },
-      {
-        "text": "Capital of Maharashtra?",
-        "options": [
-          "Pune",
-          "Nagpur",
-          "Mumbai",
-          "Nashik"
-        ],
-        "answer": 2
-      },
-      {
-        "text": "Which one is non-metal?",
-        "options": [
-          "Sodium",
-          "Calcium",
-          "Aluminium",
-          "Sulphur"
-        ],
-        "answer": 3
-      },
-      {
-        "text": "SI unit of power?",
-        "options": [
-          "Joule",
-          "Watt",
-          "Newton",
-          "Pascal"
-        ],
-        "answer": 1
-      },
-      {
-        "text": "Median of {3,5,7}?",
-        "options": [
-          "3",
-          "5",
-          "7",
-          "6"
-        ],
-        "answer": 1
-      },
-      {
-  "text": "In a man, the abducens nerve is injured. Which function will be most affected?",
-  "options": [
-    "Movement of the eyeball",
-    "Movement of the tongue",
-    "Swallowing",
-    "Movement of the neck"
-  ],
-  "answer": 0
-},
-{
-  "text": "Injury to vagus nerve in humans is least likely to affect:",
-  "options": [
-    "Tongue movements",
-    "Gastrointestinal movements",
-    "Pancreatic secretion",
-    "Cardiac movements"
-  ],
-  "answer": 0
-},
-{
-  "text": "Which cranial nerve has the highest number of branches?",
-  "options": [
-    "Vagus nerve",
-    "Trigeminal nerve",
-    "Facial nerve",
-    "None of these"
-  ],
-  "answer": 1
-},
-{
-  "text": "Sympathetic nervous system induces:",
-  "options": [
-    "Secretion of digestive juices",
-    "Increase in heart beat",
-    "Secretion of saliva",
-    "All of these"
-  ],
-  "answer": 1
-},
-      {
-  "id": "q_udl_max_M",
-  "tag": "Tech",
-  "type": "mcq_single",
-  "text": "<p>For the simply supported beam with uniform load <em>w</em> over span <em>L</em> shown, what is the <b>maximum bending moment</b>?</p><img src='images/beam_udl.png' alt='Simply supported beam with UDL' style='max-width:100%;height:auto;'>",
-  "options": [
-    "wL<sup>2</sup>/8",
-    "wL<sup>2</sup>/12",
-    "wL<sup>2</sup>/16",
-    "wL<sup>2</sup>/10"
-  ],
-  "answer": 0,
-  "marks": 2,
-  "explanation": "For a simply supported beam carrying a UDL w over the full span L, the maximum bending moment occurs at midspan: M_max = wL^2/8."
-}
-    ]
-  }
-]
+      "questions": [
+        {
+          "section": "Theory",
+          "text": "Which is the smallest prime number?",
+          "options": ["0", "1", "2", "3"],
+          "answer": 2,
+          "explain": "2 is the only even prime."
+        },
+        {
+          "section": "Theory",
+          "text": "Who wrote the Indian Constitution's preamble?",
+          "options": ["Jawaharlal Nehru", "B.R. Ambedkar", "Sardar Patel", "Rajendra Prasad"],
+          "answer": 0,
+          "explain": "The Objectives Resolution by Nehru inspired the Preamble."
+        },
+        {
+          "section": "Theory",
+          "text": "Force = ?",
+          "options": ["m/v", "m+a", "m\u00d7a", "v/a"],
+          "answer": 2,
+          "explain": "Newton's Second Law: F = m \u00d7 a."
+        },
+        {
+          "section": "Theory",
+          "text": "Which gas is most abundant in Earth's atmosphere?",
+          "options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Argon"],
+          "answer": 1
+        },
+        {
+          "section": "Theory",
+          "text": "GCF of 12 and 18 is",
+          "options": ["2", "3", "4", "6"],
+          "answer": 3
+        },
+        {
+          "section": "Theory",
+          "text": "ATP is produced in?",
+          "options": ["Mitochondria", "Nucleus", "Ribosome", "Lysosome"],
+          "answer": 0
+        },
+        {
+          "section": "Theory",
+          "text": "Capital of Maharashtra?",
+          "options": ["Pune", "Nagpur", "Mumbai", "Nashik"],
+          "answer": 2
+        },
+        {
+          "section": "Theory",
+          "text": "Which one is non-metal?",
+          "options": ["Sodium", "Calcium", "Aluminium", "Sulphur"],
+          "answer": 3
+        },
+        {
+          "section": "Theory",
+          "text": "SI unit of power?",
+          "options": ["Joule", "Watt", "Newton", "Pascal"],
+          "answer": 1
+        },
+        {
+          "section": "Theory",
+          "text": "Median of {3,5,7}?",
+          "options": ["3", "5", "7", "6"],
+          "answer": 1
+        },
+        {
+          "section": "Theory",
+          "text": "In a man, the abducens nerve is injured. Which function will be most affected?",
+          "options": ["Movement of the eyeball", "Movement of the tongue", "Swallowing", "Movement of the neck"],
+          "answer": 0
+        },
+        {
+          "section": "Theory",
+          "text": "Injury to vagus nerve in humans is least likely to affect:",
+          "options": ["Tongue movements", "Gastrointestinal movements", "Pancreatic secretion", "Cardiac movements"],
+          "answer": 0
+        },
+        {
+          "section": "Theory",
+          "text": "Which cranial nerve has the highest number of branches?",
+          "options": ["Vagus nerve", "Trigeminal nerve", "Facial nerve", "None of these"],
+          "answer": 1
+        },
+        {
+          "section": "Theory",
+          "text": "Sympathetic nervous system induces:",
+          "options": ["Secretion of digestive juices", "Increase in heart beat", "Secretion of saliva", "All of these"],
+          "answer": 1
+        },
+        {
+          "section": "Diagram-Curve",
+          "id": "q_udl_max_M",
+          "tag": "Tech",
+          "type": "mcq_single",
+          "text": "<p>For the simply supported beam with uniform load <em>w</em> over span <em>L</em> shown, what is the <b>maximum bending moment</b>?</p><img src='images/beam_udl.png' alt='Simply supported beam with UDL' style='max-width:100%;height:auto;'>",
+          "options": ["wL<sup>2</sup>/8", "wL<sup>2</sup>/12", "wL<sup>2</sup>/16", "wL<sup>2</sup>/10"],
+          "answer": 0,
+          "marks": 2,
+          "explanation": "For a simply supported beam carrying a UDL w over the full span L, the maximum bending moment occurs at midspan: M_max = wL^2/8."
+        }
+      ]
+    }
+  ]
 }
