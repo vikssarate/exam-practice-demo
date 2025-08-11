@@ -103,7 +103,44 @@
           "answer": 0,
           "marks": 2,
           "explanation": "For a simply supported beam carrying a UDL w over the full span L, the maximum bending moment occurs at midspan: M_max = wL^2/8."
-        }
+        },
+        {
+    "id": 1,
+    "section": "Theory",
+    "text": "The principle of surveying is to:",
+    "options": [
+      "Work from part to whole",
+      "Work from whole to part",
+      "Work from lower level to higher level",
+      "Work from higher level to lower level"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 2,
+    "section": "Theory",
+    "text": "The type of survey in which the curvature of the earth is taken into account is called:",
+    "options": [
+      "Plane survey",
+      "Topographical survey",
+      "Geodetic survey",
+      "Geological survey"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 3,
+    "section": "Theory",
+    "text": "Survey which is carried out to provide an accurate map of large estates are known as:",
+    "options": [
+      "Plane survey",
+      "Topographical survey",
+      "Geodetic survey",
+      "Geological survey"
+    ],
+    "answer": 2
+  }
+
       ]
     }
   ]
