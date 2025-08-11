@@ -34,15 +34,12 @@ button.primary{background:var(--accent);color:#fff;border-color:transparent;font
 hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .qtitle{font-weight:800;margin:0 0 8px 0}
 #qText img{max-width:100%;height:auto;display:block;margin-top:8px;border-radius:8px}
-.tabs {display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
-.tab {border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px;cursor:pointer}
-.tab.active {background:var(--accent);color:#fff;border-color:transparent}
-.badge.sec {margin-left:8px;background:color-mix(in oklab,var(--good),white 18%)}
-/* section tabs */
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
-.tab{border-radius:999px;padding:6px 10px;border:1px solid var(--border);cursor:pointer;font-size:13px}
+
+/* Section tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
+.tab{border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px;cursor:pointer}
 .tab.active{background:var(--accent);color:#fff;border-color:transparent}
-.tab .count{opacity:.8;margin-left:6px}
+.badge.sec{margin-left:8px;background:color-mix(in oklab,var(--good),white 18%)}
 </style>
 </head>
 <body>
@@ -96,94 +93,84 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <div id="info"></div>
   </aside>
 </main>
-  <script>
+
+<script>
 /* ========= App state ========= */
 const state = {
   tests: [],
   activeTest: null,
   idx: 0,                 // current GLOBAL question index
-  answers: {},           // q.id -> option index
-  review: {},            // q.id -> true
+  answers: {},            // key(q.id ?? i) -> option index
+  review: {},             // key(q.id ?? i) -> true
   startTs: null,
   endTs: null,
   timer: null,
 
-  // NEW: sections
-  section: 'All',        // current section filter label
-  sectionIndexMap: []    // array of GLOBAL indexes included in current section
+  // Sections
+  section: 'All',         // current section filter
+  sectionIndexMap: []     // array of GLOBAL indexes included in current section
 };
 
 /* ========= Load questions ========= */
 async function loadQuestions() {
   const res = await fetch('questions.json?v=img9');
   const data = await res.json();
-  // support both {tests:[...]} and plain array
   state.tests = Array.isArray(data)
-    ? [{ id:'demo', title:'Demo', durationMinutes:30, negative:0.25, questions:data }]
+    ? [{ id:'demo', title:'Demo Test', durationMinutes:30, negative:0.25, questions:data }]
     : data.tests;
   renderTestList();
 }
 
 /* ========= DOM refs ========= */
 const $ = s => document.querySelector(s);
-const testsEl    = $('#tests');
-const testList   = $('#testList');
-const examArea   = $('#examArea');
-const resultArea = $('#resultArea');
-const qHead      = $('#qHead');
-const qText      = $('#qText');
-const optWrap    = $('#optWrap');
-const palette    = $('#palette');
-const testTitle  = $('#testTitle');
-const info       = $('#info');
-const timerEl    = $('#timer');
-const remain     = $('#remain');
-const sectionTabs= $('#sectionTabs'); // NEW
+const testsEl     = $('#tests');
+const testList    = $('#testList');
+const examArea    = $('#examArea');
+const resultArea  = $('#resultArea');
+const qHead       = $('#qHead');
+const qText       = $('#qText');
+const optWrap     = $('#optWrap');
+const palette     = $('#palette');
+const testTitle   = $('#testTitle');
+const info        = $('#info');
+const timerEl     = $('#timer');
+const remain      = $('#remain');
+const sectionTabs = $('#sectionTabs');
 
 /* ========= Helpers ========= */
-const fmt = t => String(t).padStart(2,'0');
-const fmtHMS = sec => {
-  const h = Math.floor(sec/3600),
-        m = Math.floor((sec%3600)/60),
-        s = Math.floor(sec%60);
+const fmt=t=>String(t).padStart(2,'0');
+const fmtHMS=sec=>{
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=Math.floor(sec%60);
   return `${fmt(h)}:${fmt(m)}:${fmt(s)}`;
 };
 
-/* === Sections helpers (NEW) === */
+/* === Section helpers === */
 function getAllSections(list){
-  const set = new Set();
-  list.forEach(q => { if (q.section) set.add(q.section); });
-  return ['All', ...Array.from(set)];
+  const set=new Set();
+  list.forEach(q=>{ if(q.section) set.add(q.section); });
+  return ['All',...Array.from(set)];
 }
 function buildSectionIndexMap(){
-  const list = state.activeTest.questions;
-  const keep = state.section === 'All'
-    ? () => true
-    : (q) => q.section === state.section;
-
-  const prevIndex = state.idx;                // try keep current q if still visible
-  state.sectionIndexMap = [];
-  list.forEach((q, i) => { if (keep(q)) state.sectionIndexMap.push(i); });
-
-  // realign current index into the map (or jump to first in map)
-  if (!state.sectionIndexMap.length) { state.idx = 0; return; }
-  const pos = state.sectionIndexMap.indexOf(prevIndex);
-  state.idx = pos >= 0 ? prevIndex : state.sectionIndexMap[0];
+  const list=state.activeTest.questions;
+  const keep = state.section==='All' ? ()=>true : (q)=>q.section===state.section;
+  const prev=state.idx;
+  state.sectionIndexMap=[];
+  list.forEach((q,i)=>{ if(keep(q)) state.sectionIndexMap.push(i); });
+  if(!state.sectionIndexMap.length){ state.idx=0; return; }
+  const pos=state.sectionIndexMap.indexOf(prev);
+  state.idx = pos>=0 ? prev : state.sectionIndexMap[0];
 }
 function renderSectionTabs(){
-  const list = state.activeTest.questions;
-  const sections = getAllSections(list);
-  sectionTabs.innerHTML = '';
-  sections.forEach(name => {
-    const count = name === 'All'
-      ? list.length
-      : list.filter(q => q.section === name).length;
-
-    const b = document.createElement('button');
-    b.className = 'tab' + (state.section === name ? ' active' : '');
-    b.textContent = `${name} (${count})`;
-    b.onclick = () => {
-      state.section = name;
+  const list=state.activeTest.questions;
+  const sections=getAllSections(list);
+  sectionTabs.innerHTML='';
+  sections.forEach(name=>{
+    const count = name==='All' ? list.length : list.filter(q=>q.section===name).length;
+    const b=document.createElement('button');
+    b.className='tab'+(state.section===name?' active':'');
+    b.textContent=`${name} (${count})`;
+    b.onclick=()=>{
+      state.section=name;
       buildSectionIndexMap();
       renderPalette();
       renderQuestion();
@@ -191,210 +178,170 @@ function renderSectionTabs(){
     };
     sectionTabs.appendChild(b);
   });
-
-  // small counter badge (optional)
-  const badge = document.createElement('span');
-  badge.className = 'badge sec';
-  const pos = state.sectionIndexMap.indexOf(state.idx);
-  badge.textContent = `Showing ${pos+1} / ${state.sectionIndexMap.length}`;
+  const badge=document.createElement('span');
+  badge.className='badge sec';
+  const pos=state.sectionIndexMap.indexOf(state.idx);
+  badge.textContent=`Showing ${pos+1} / ${state.sectionIndexMap.length}`;
   sectionTabs.appendChild(badge);
 }
 
 /* ========= Test lifecycle ========= */
-function startTest(t) {
-  state.activeTest = t;
-  state.idx = 0;
-  state.answers = {};
-  state.review = {};
-  state.section = 'All';
-  state.startTs = Date.now();
-  state.endTs = state.startTs + t.durationMinutes * 60 * 1000;
+function startTest(t){
+  state.activeTest=t;
+  state.idx=0;
+  state.answers={};
+  state.review={};
+  state.section='All';
+  state.startTs=Date.now();
+  state.endTs=state.startTs + t.durationMinutes*60*1000;
 
-  testList.style.display = 'none';
-  resultArea.style.display = 'none';
-  examArea.style.display = 'block';
+  testList.style.display='none';
+  resultArea.style.display='none';
+  examArea.style.display='block';
 
-  testTitle.textContent = t.title;
-  state.section = 'All';
-buildSectionIndexMap();
-renderSectionTabs();
-  info.innerHTML = `<p><b>Negative Marking:</b> -${t.negative}</p>
-                    <p><b>Marks / correct:</b> 1 (or per question)</p>`;
+  testTitle.textContent=t.title;
+  info.innerHTML=`<p><b>Negative Marking:</b> -${t.negative}</p>
+                  <p><b>Marks / correct:</b> 1 (or per question)</p>`;
 
-  tickTimer();
+  buildSectionIndexMap();
+  renderSectionTabs();
+
   clearInterval(state.timer);
-  state.timer = setInterval(tickTimer, 1000);
+  tickTimer();
+  state.timer=setInterval(tickTimer,1000);
 
   renderQuestion();
   renderPalette();
 }
-
 function tickTimer(){
-  if (!state.activeTest) return;
-  const left = Math.max(0, Math.floor((state.endTs - Date.now())/1000));
-  timerEl.textContent = fmtHMS(left);
-  remain.textContent  = fmtHMS(left);
-  if (left === 0) submitTest();
+  if(!state.activeTest) return;
+  const left=Math.max(0,Math.floor((state.endTs-Date.now())/1000));
+  timerEl.textContent=fmtHMS(left);
+  remain.textContent=fmtHMS(left);
+  if(left===0) submitTest();
 }
-
 function currentQuestion(){ return state.activeTest.questions[state.idx]; }
 
 /* ========= Renderers ========= */
-    /* ========= Renderers ========= */
 function renderQuestion(){
-  const q = currentQuestion();
+  const q=currentQuestion();
 
-  // Heading and rich HTML body (supports <img>, <sup>, etc.)
-  qHead.textContent = `Q${state.idx + 1}.`;
-  qText.innerHTML = q.text;
+  // Heading & body (HTML allowed)
+  qHead.textContent=`Q${state.idx+1}.`;
+  qText.innerHTML=q.text;
 
-  // Render options (store answers by q.id if present, else by index)
-  optWrap.innerHTML = '';
-  const key = q.id ?? state.idx;
+  // Options (store by q.id if present)
+  optWrap.innerHTML='';
+  const key=q.id ?? state.idx;
 
-  q.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'opt';
-    btn.type = 'button';
-    btn.innerHTML = opt;                 // allow HTML in options
-
-    // highlight selection
-    if (state.answers[key] === i) btn.classList.add('selected');
-
-    // save answer and re-render
-    btn.onclick = () => {
-      state.answers[key] = i;
-      renderQuestion();                  // refresh selected state
-      renderPalette();                   // keep palette in sync
+  q.options.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.type='button';
+    btn.innerHTML=opt; // allow HTML in options
+    if(state.answers[key]===i) btn.classList.add('selected');
+    btn.onclick=()=>{
+      state.answers[key]=i;
+      renderQuestion();
+      renderPalette();
     };
-
     optWrap.appendChild(btn);
   });
 }
-
 function renderPalette(){
-  const list = state.activeTest.questions;
-  palette.innerHTML = '';
+  const list=state.activeTest.questions;
+  palette.innerHTML='';
+  list.forEach((q,i)=>{
+    const b=document.createElement('button');
+    b.textContent=i+1;
 
-  list.forEach((q, i) => {
-    const b = document.createElement('button');
-    b.textContent = i + 1;
+    const key=q.id ?? i;
+    const answered=state.answers[key]!=null;
+    if(answered) b.style.background='rgba(21,101,192,.15)';
 
-    // use q.id if present, otherwise fall back to index
-    const key = q.id ?? i;
+    const inFilter = state.section==='All' || q.section===state.section;
+    b.style.opacity=inFilter ? 1 : .35;
 
-    // answered highlight
-    const answered = state.answers[key] != null;
-    if (answered) b.style.background = 'rgba(21,101,192,.15)';
-
-    // dim buttons not in the active section
-    const inFilter = state.section === 'All' || q.section === state.section;
-    b.style.opacity = inFilter ? 1 : 0.35;
-
-    b.onclick = () => { 
-      state.idx = i; 
-      renderQuestion(); 
-      renderSectionTabs(); // refresh section tabs if needed
-    };
-
+    b.onclick=()=>{ state.idx=i; renderQuestion(); renderSectionTabs(); };
     palette.appendChild(b);
   });
 }
 
 /* ========= Controls ========= */
-$('#prevBtn').onclick = () => {
-  const pos = state.sectionIndexMap.indexOf(state.idx);
-  if (pos > 0) {
-    state.idx = state.sectionIndexMap[pos - 1];
-    renderQuestion();
-  }
+$('#prevBtn').onclick=()=>{
+  const pos=state.sectionIndexMap.indexOf(state.idx);
+  if(pos>0){ state.idx=state.sectionIndexMap[pos-1]; renderQuestion(); }
 };
-
-$('#nextBtn').onclick = () => {
-  const pos = state.sectionIndexMap.indexOf(state.idx);
-  if (pos < state.sectionIndexMap.length - 1) {
-    state.idx = state.sectionIndexMap[pos + 1];
-    renderQuestion();
-  }
+$('#nextBtn').onclick=()=>{
+  const pos=state.sectionIndexMap.indexOf(state.idx);
+  if(pos<state.sectionIndexMap.length-1){ state.idx=state.sectionIndexMap[pos+1]; renderQuestion(); }
 };
-$('#clearBtn').onclick = () => {
-  const q = currentQuestion();
-  const key = q.id ?? state.idx;
+$('#clearBtn').onclick=()=>{
+  const q=currentQuestion(); const key=q.id ?? state.idx;
   delete state.answers[key];
-  renderQuestion();
-  renderPalette();
+  renderQuestion(); renderPalette();
 };
-$('#markBtn').onclick = () => {
-  const q = currentQuestion();
-  const key = q.id ?? state.idx;
+$('#markBtn').onclick=()=>{
+  const q=currentQuestion(); const key=q.id ?? state.idx;
   state.review[key] = !state.review[key];
   renderPalette();
 };
-$('#submitBtn').onclick = () => submitTest();
+$('#submitBtn').onclick=()=>submitTest();
 
 /* ========= Submit / Review / Export ========= */
 function submitTest(){
   clearInterval(state.timer);
-  const t = state.activeTest;
-  const neg = t.negative || 0;
-  let score = 0, correct=0, wrong=0, unattempt=0;
+  const t=state.activeTest;
+  const neg=t.negative || 0;
+  let score=0, correct=0, wrong=0, unattempt=0;
 
-  // score across ALL questions, not just filtered
-  t.questions.forEach(q=>{
-    const a = state.answers[q.id];
-    if (a == null) { unattempt++; return; }
-    if (a === q.answer) { correct++; score += (q.marks || 1); }
+  // Score across ALL questions
+  t.questions.forEach((q,i)=>{
+    const key=q.id ?? i;
+    const a=state.answers[key];
+    if(a==null){ unattempt++; return; }
+    if(a===q.answer){ correct++; score += (q.marks||1); }
     else { wrong++; score -= neg; }
   });
 
-  const total = t.questions.length;
-  $('#resultSummary').innerHTML = `
-    <p><b>Score:</b> ${score.toFixed(2)} / ${total}</p>
-    <p><b>Correct:</b> ${correct}, <b>Wrong:</b> ${wrong}, <b>Unattempted:</b> ${unattempt}</p>
-    <p><b>Time:</b> ${fmtHMS(Math.floor((Date.now()-state.startTs)/1000))}</p>`;
-  examArea.style.display = 'none';
-  resultArea.style.display = 'block';
+  const total=t.questions.length;
+  $('#resultSummary').innerHTML=
+    `<p><b>Score:</b> ${score.toFixed(2)} / ${total}</p>
+     <p><b>Correct:</b> ${correct}, <b>Wrong:</b> ${wrong}, <b>Unattempted:</b> ${unattempt}</p>
+     <p><b>Time:</b> ${fmtHMS(Math.floor((Date.now()-state.startTs)/1000))}</p>`;
+  examArea.style.display='none';
+  resultArea.style.display='block';
 }
-
-$('#reviewBtn').onclick = () => {
-  state.idx = 0;
-  examArea.style.display = 'block';
-  resultArea.style.display = 'none';
-  renderQuestion();
-  renderPalette();
+$('#reviewBtn').onclick=()=>{
+  state.idx=0;
+  examArea.style.display='block';
+  resultArea.style.display='none';
+  renderQuestion(); renderPalette();
 };
-
-$('#exportBtn').onclick = ()=>{
-  const payload = {
-    test: state.activeTest?.id,
-    answers: state.answers,
-    review: state.review,
-    ts: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='exam_result.json'; a.click(); URL.revokeObjectURL(url);
+$('#exportBtn').onclick=()=>{
+  const payload={ test: state.activeTest?.id, answers: state.answers, review: state.review, ts: new Date().toISOString() };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='exam_result.json'; a.click(); URL.revokeObjectURL(url);
 };
 
 /* ========= Test list ========= */
 function renderTestList(){
-  testsEl.innerHTML = '';
+  testsEl.innerHTML='';
   state.tests.forEach(t=>{
-    const b = document.createElement('button');
-    b.className = 'opt';
-    b.innerHTML = `<div><b>${t.title}</b><div class="muted">${t.durationMinutes} min — ${t.questions.length} Q</div></div>`;
-    b.onclick = () => startTest(t);
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=`<div><b>${t.title}</b><div class="muted">${t.durationMinutes} min — ${t.questions.length} Q</div></div>`;
+    b.onclick=()=>startTest(t);
     testsEl.appendChild(b);
   });
 }
 
 /* ========= Boot ========= */
 loadQuestions();
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
 }
 </script>
-
 </body>
 </html>
