@@ -183,7 +183,119 @@
     "Engineering surveying"
   ],
   "answer": 1
-}     
+},
+  {
+  "section": "Theory",
+  "text": "1 meter is equal to how many yards?",
+  "options": [
+    "0.9144 yard",
+    "1.094 yard",
+    "1 yard",
+    "0.84 yard"
+  ],
+  "answer": 1
+},
+{
+  "section": "Theory",
+  "text": "General layout of new colony showing roads, market, hospital, river, etc. is called?",
+  "options": [
+    "Key plan",
+    "Index plan",
+    "Site plan",
+    "Layout plan"
+  ],
+  "answer": 0
+},
+{
+  "section": "Theory",
+  "text": "How many feet are there in one acre?",
+  "options": [
+    "4840 sq. yard",
+    "43560 sq. feet",
+    "Both A and B",
+    "None of the above"
+  ],
+  "answer": 2
+},
+{
+  "section": "Theory",
+  "text": "1 acre = ? sq. chains",
+  "options": [
+    "10",
+    "100",
+    "1",
+    "66"
+  ],
+  "answer": 1
+},
+{
+  "section": "Theory",
+  "text": "Which instrument registers the number of paces of the person using it?",
+  "options": [
+    "Pedometer",
+    "Odometer",
+    "Pace meter",
+    "Passometer"
+  ],
+  "answer": 3
+},
+{
+  "section": "Theory",
+  "text": "1 square mile is equal to how many acres?",
+  "options": [
+    "640 acres",
+    "484 acres",
+    "160 acres",
+    "256 acres"
+  ],
+  "answer": 0
+},
+{
+  "section": "Theory",
+  "text": "Which type of survey is used for determining the variations of the earth's magnetic field?",
+  "options": [
+    "Geological survey",
+    "Mining survey",
+    "Astronomical survey",
+    "Magnetic survey"
+  ],
+  "answer": 3
+},
+
+// Extra questions created from available data:
+{
+  "section": "Theory",
+  "text": "1 acre = ? sq. feet",
+  "options": [
+    "4046.856 sq. m",
+    "43560 sq. feet",
+    "4840 sq. yard",
+    "1000 sq. feet"
+  ],
+  "answer": 1
+},
+{
+  "section": "Theory",
+  "text": "How many chains are there in one furlong?",
+  "options": [
+    "5 chains",
+    "8 chains",
+    "10 chains",
+    "12 chains"
+  ],
+  "answer": 2
+},
+{
+  "section": "Theory",
+  "text": "1 nautical mile equals how many meters approximately?",
+  "options": [
+    "1852 m",
+    "1609 m",
+    "2000 m",
+    "1500 m"
+  ],
+  "answer": 0
+}
 
       ]
     }
