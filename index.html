@@ -10,7 +10,8 @@
 <style>
 :root{--bg:#f6f9ff;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e5edf7;--accent:#1565c0;--good:#1e8e3e;--bad:#c62828;--radius:14px;--shadow:0 10px 30px rgba(0,0,0,.06)}
 @media(prefers-color-scheme:dark){:root{--bg:#0b0f14;--card:#121923;--text:#eaf2ff;--muted:#8aa0b7;--border:#1e2a3a;--accent:#5ab0ff;--shadow:0 12px 34px rgba(0,0,0,.35)}}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
 header{position:sticky;top:0;background:color-mix(in oklab,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);z-index:5}
 .top{display:flex;align-items:center;justify-content:space-between}
@@ -33,6 +34,12 @@ button.primary{background:var(--accent);color:#fff;border-color:transparent;font
 hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .qtitle{font-weight:800;margin:0 0 8px 0}
 #qText img{max-width:100%;height:auto;display:block;margin-top:8px;border-radius:8px}
+
+/* section tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.tab{border-radius:999px;padding:6px 10px;border:1px solid var(--border);cursor:pointer;font-size:13px}
+.tab.active{background:var(--accent);color:#fff;border-color:transparent}
+.tab .count{opacity:.8;margin-left:6px}
 </style>
 </head>
 <body>
@@ -54,6 +61,10 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <div id="examArea" style="display:none">
       <div class="badge" id="testTitle"></div>
       <div class="muted">Remaining: <span id="remain"></span></div>
+
+      <!-- NEW: Section tabs -->
+      <div class="tabs" id="sectionTabs" aria-label="Question sections"></div>
+
       <hr>
       <h3 class="qtitle" id="qHead">Q1.</h3>
       <div id="qText"></div>
@@ -86,23 +97,30 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 </main>
 
 <script>
-/* ====== Data loading ====== */
+/* ====== Data & state ====== */
 const state = {
   tests: [],
   activeTest: null,
+  // filtering
+  sections: [],          // ['All', 'Theory', ...]
+  section: 'All',        // current selected
+  qIdxMap: [],           // mapping filtered index -> original index
+  // navigation/answers
   idx: 0,
-  answers: {}, // qid -> option index
-  review: {},  // qid -> true
+  answers: {},           // qid -> option index
+  review: {},            // qid -> true
   startTs: null,
   endTs: null,
   timer: null
 };
 
 async function loadQuestions() {
-  const res = await fetch('questions.json?v=img9');
+  // bump matches your sw.js (v10)
+  const res = await fetch('questions.json?v=img10');
   const data = await res.json();
-  // support both {tests:[...]} and simple [{...}] shapes
-  state.tests = Array.isArray(data) ? [{id:'demo',title:'Demo',durationMinutes:30,negative:0.25,questions:data}] : data.tests;
+  state.tests = Array.isArray(data)
+    ? [{id:'demo',title:'Demo',durationMinutes:30,negative:0.25,questions:data}]
+    : data.tests;
   renderTestList();
 }
 
@@ -120,18 +138,63 @@ const testTitle = $('#testTitle');
 const info = $('#info');
 const timerEl = $('#timer');
 const remain = $('#remain');
+const sectionTabs = $('#sectionTabs');
 
 /* ====== Helpers ====== */
 function fmt(t){return String(t).padStart(2,'0')}
 function fmtHMS(sec){ const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=Math.floor(sec%60); return `${fmt(h)}:${fmt(m)}:${fmt(s)}` }
+const getQ = (i) => state.activeTest.questions[i];
 
+/* ====== Sections / filtering ====== */
+function buildSections(){
+  const qs = state.activeTest.questions;
+  const set = new Set(qs.map(q => (q.section || 'General')));
+  state.sections = ['All', ...Array.from(set)];
+}
+
+function applyFilter(){
+  const want = state.section;
+  const qs = state.activeTest.questions;
+  state.qIdxMap = [];
+  qs.forEach((q, i) => {
+    const sec = q.section || 'General';
+    if (want === 'All' || sec === want) state.qIdxMap.push(i);
+  });
+  state.idx = 0; // reset to first in filtered list
+}
+
+function renderSectionTabs(){
+  const counts = {};
+  const qs = state.activeTest.questions;
+  state.sections.forEach(s => counts[s]=0);
+  qs.forEach(q => {
+    const sec = q.section || 'General';
+    counts[sec] = (counts[sec]||0)+1;
+    counts['All'] = (counts['All']||0)+1;
+  });
+
+  sectionTabs.innerHTML = '';
+  state.sections.forEach(sec => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (sec===state.section?' active':'');
+    b.innerHTML = `${sec}<span class="count">(${counts[sec]||0})</span>`;
+    b.onclick = () => { state.section = sec; applyFilter(); renderQuestion(); renderPalette(); renderSectionTabs(); };
+    sectionTabs.appendChild(b);
+  });
+}
+
+/* ====== Start test ====== */
 function startTest(t) {
   state.activeTest = t;
-  state.idx = 0;
   state.answers = {};
   state.review = {};
   state.startTs = Date.now();
   state.endTs = state.startTs + t.durationMinutes * 60 * 1000;
+
+  // prepare sections
+  buildSections();
+  state.section = 'All';
+  applyFilter();
 
   testList.style.display='none';
   resultArea.style.display='none';
@@ -141,10 +204,12 @@ function startTest(t) {
   info.innerHTML = `<p><b>Negative Marking:</b> -${t.negative}</p><p><b>Marks / correct:</b> 1 (or per question)</p>`;
   tickTimer();
   state.timer = setInterval(tickTimer, 1000);
+  renderSectionTabs();
   renderQuestion();
   renderPalette();
 }
 
+/* ====== Timer ====== */
 function tickTimer(){
   if(!state.activeTest) return;
   const left = Math.max(0, Math.floor((state.endTs - Date.now())/1000));
@@ -153,21 +218,22 @@ function tickTimer(){
   if(left===0){ submitTest(); }
 }
 
-function currentQuestion(){ return state.activeTest.questions[state.idx]; }
+/* ====== Rendering ====== */
+function currentIndexOriginal(){ return state.qIdxMap[state.idx] }
+function currentQuestion(){ return getQ(currentIndexOriginal()); }
 
 function renderQuestion(){
   const q = currentQuestion();
   qHead.textContent = `Q${state.idx+1}.`;
-  // IMPORTANT: render HTML, not plain text
-  qText.innerHTML = q.text;                       // ← renders <img>, <sup>, etc.
+  // render HTML so <img>, <sup>, etc. work
+  qText.innerHTML = q.text;
 
   optWrap.innerHTML = '';
   q.options.forEach((opt,i)=>{
     const btn = document.createElement('button');
     btn.className = 'opt';
     btn.type = 'button';
-    // render option as HTML too (allows image options)
-    btn.innerHTML = opt;                          // ← key change
+    btn.innerHTML = opt; // allow image options & HTML
     if(state.answers[q.id] === i) btn.classList.add('selected');
     btn.onclick = ()=>{ state.answers[q.id]=i; renderQuestion(); renderPalette(); };
     optWrap.appendChild(btn);
@@ -175,9 +241,9 @@ function renderQuestion(){
 }
 
 function renderPalette(){
-  const list = state.activeTest.questions;
   palette.innerHTML='';
-  list.forEach((q,i)=>{
+  state.qIdxMap.forEach((origIdx, i)=>{
+    const q = getQ(origIdx);
     const b=document.createElement('button');
     const answered = state.answers[q.id] != null;
     b.textContent = i+1;
@@ -190,22 +256,26 @@ function renderPalette(){
 
 /* ====== Controls ====== */
 $('#prevBtn').onclick = ()=>{ if(state.idx>0){ state.idx--; renderQuestion(); } };
-$('#nextBtn').onclick = ()=>{ if(state.idx < state.activeTest.questions.length-1){ state.idx++; renderQuestion(); } };
+$('#nextBtn').onclick = ()=>{ if(state.idx < state.qIdxMap.length-1){ state.idx++; renderQuestion(); } };
 $('#clearBtn').onclick = ()=>{ const q=currentQuestion(); delete state.answers[q.id]; renderQuestion(); renderPalette(); };
 $('#markBtn').onclick = ()=>{ const q=currentQuestion(); state.review[q.id]=!state.review[q.id]; renderPalette(); };
 $('#submitBtn').onclick = ()=> submitTest();
 
+/* ====== Submit / Result ====== */
 function submitTest(){
   clearInterval(state.timer);
   const t = state.activeTest;
   const neg = t.negative || 0;
   let score = 0, correct=0, wrong=0, unattempt=0;
+
+  // score against the whole test (not just filtered)
   t.questions.forEach(q=>{
     const a = state.answers[q.id];
     if(a==null){ unattempt++; return; }
     if(a === q.answer){ correct++; score += (q.marks||1); }
     else { wrong++; score -= neg; }
   });
+
   const total = t.questions.length;
   const summary = `
     <p><b>Score:</b> ${score.toFixed(2)} / ${total}</p>
@@ -218,7 +288,6 @@ function submitTest(){
 }
 
 $('#reviewBtn').onclick = ()=>{
-  // simple review: go back and allow navigation with answers highlighted
   state.idx = 0;
   examArea.style.display='block';
   resultArea.style.display='none';
@@ -229,6 +298,7 @@ $('#reviewBtn').onclick = ()=>{
 $('#exportBtn').onclick = ()=>{
   const payload = {
     test: state.activeTest?.id,
+    section: state.section,
     answers: state.answers,
     review: state.review,
     ts: new Date().toISOString()
