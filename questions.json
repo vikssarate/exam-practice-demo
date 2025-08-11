@@ -139,7 +139,51 @@
       "Geological survey"
     ],
     "answer": 2
-  }
+  },
+   {
+  "section": "Theory",
+  "text": "In order to determine the natural features such as rivers, forests, lakes etc., the surveying conducted is:",
+  "options": [
+    "Geological surveying",
+    "Topographical surveying",
+    "Land surveying",
+    "Cadastral surveying"
+  ],
+  "answer": 1
+},
+{
+  "section": "Theory",
+  "text": "An angle of a well-conditioned triangle should be between:",
+  "options": [
+    "30°–120°",
+    "45°–90°",
+    "60°–120°",
+    "20°–150°"
+  ],
+  "answer": 0
+},
+{
+  "section": "Theory",
+  "text": "An angle which is neither too acute nor too obtuse is called:",
+  "options": [
+    "Right angle",
+    "Well-conditioned angle",
+    "Oblique angle",
+    "Reflex angle"
+  ],
+  "answer": 1
+},
+{
+  "section": "Theory",
+  "text": "The type of survey conducted to fix the property boundaries is called:",
+  "options": [
+    "Topographical surveying",
+    "Cadastral surveying",
+    "Geological surveying",
+    "Engineering surveying"
+  ],
+  "answer": 1
+}     
 
       ]
     }
