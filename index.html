@@ -34,7 +34,10 @@ button.primary{background:var(--accent);color:#fff;border-color:transparent;font
 hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .qtitle{font-weight:800;margin:0 0 8px 0}
 #qText img{max-width:100%;height:auto;display:block;margin-top:8px;border-radius:8px}
-
+.tabs {display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px}
+.tab {border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px;cursor:pointer}
+.tab.active {background:var(--accent);color:#fff;border-color:transparent}
+.badge.sec {margin-left:8px;background:color-mix(in oklab,var(--good),white 18%)}
 /* section tabs */
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
 .tab{border-radius:999px;padding:6px 10px;border:1px solid var(--border);cursor:pointer;font-size:13px}
@@ -61,9 +64,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <div id="examArea" style="display:none">
       <div class="badge" id="testTitle"></div>
       <div class="muted">Remaining: <span id="remain"></span></div>
-
-      <!-- NEW: Section tabs -->
-      <div class="tabs" id="sectionTabs" aria-label="Question sections"></div>
+      <div class="tabs" id="sectionTabs"></div>
 
       <hr>
       <h3 class="qtitle" id="qHead">Q1.</h3>
@@ -95,202 +96,231 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
     <div id="info"></div>
   </aside>
 </main>
-
-<script>
-/* ====== Data & state ====== */
+  <script>
+/* ========= App state ========= */
 const state = {
   tests: [],
   activeTest: null,
-  // filtering
-  sections: [],          // ['All', 'Theory', ...]
-  section: 'All',        // current selected
-  qIdxMap: [],           // mapping filtered index -> original index
-  // navigation/answers
-  idx: 0,
-  answers: {},           // qid -> option index
-  review: {},            // qid -> true
+  idx: 0,                 // current GLOBAL question index
+  answers: {},           // q.id -> option index
+  review: {},            // q.id -> true
   startTs: null,
   endTs: null,
-  timer: null
+  timer: null,
+
+  // NEW: sections
+  section: 'All',        // current section filter label
+  sectionIndexMap: []    // array of GLOBAL indexes included in current section
 };
 
+/* ========= Load questions ========= */
 async function loadQuestions() {
-  // bump matches your sw.js (v10)
-  const res = await fetch('questions.json?v=img10');
+  const res = await fetch('questions.json?v=img9');
   const data = await res.json();
+  // support both {tests:[...]} and plain array
   state.tests = Array.isArray(data)
-    ? [{id:'demo',title:'Demo',durationMinutes:30,negative:0.25,questions:data}]
+    ? [{ id:'demo', title:'Demo', durationMinutes:30, negative:0.25, questions:data }]
     : data.tests;
   renderTestList();
 }
 
-/* ====== UI refs ====== */
+/* ========= DOM refs ========= */
 const $ = s => document.querySelector(s);
-const testsEl = $('#tests');
-const testList = $('#testList');
-const examArea = $('#examArea');
+const testsEl    = $('#tests');
+const testList   = $('#testList');
+const examArea   = $('#examArea');
 const resultArea = $('#resultArea');
-const qHead = $('#qHead');
-const qText = $('#qText');
-const optWrap = $('#optWrap');
-const palette = $('#palette');
-const testTitle = $('#testTitle');
-const info = $('#info');
-const timerEl = $('#timer');
-const remain = $('#remain');
-const sectionTabs = $('#sectionTabs');
+const qHead      = $('#qHead');
+const qText      = $('#qText');
+const optWrap    = $('#optWrap');
+const palette    = $('#palette');
+const testTitle  = $('#testTitle');
+const info       = $('#info');
+const timerEl    = $('#timer');
+const remain     = $('#remain');
+const sectionTabs= $('#sectionTabs'); // NEW
 
-/* ====== Helpers ====== */
-function fmt(t){return String(t).padStart(2,'0')}
-function fmtHMS(sec){ const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=Math.floor(sec%60); return `${fmt(h)}:${fmt(m)}:${fmt(s)}` }
-const getQ = (i) => state.activeTest.questions[i];
+/* ========= Helpers ========= */
+const fmt = t => String(t).padStart(2,'0');
+const fmtHMS = sec => {
+  const h = Math.floor(sec/3600),
+        m = Math.floor((sec%3600)/60),
+        s = Math.floor(sec%60);
+  return `${fmt(h)}:${fmt(m)}:${fmt(s)}`;
+};
 
-/* ====== Sections / filtering ====== */
-function buildSections(){
-  const qs = state.activeTest.questions;
-  const set = new Set(qs.map(q => (q.section || 'General')));
-  state.sections = ['All', ...Array.from(set)];
+/* === Sections helpers (NEW) === */
+function getAllSections(list){
+  const set = new Set();
+  list.forEach(q => { if (q.section) set.add(q.section); });
+  return ['All', ...Array.from(set)];
 }
+function buildSectionIndexMap(){
+  const list = state.activeTest.questions;
+  const keep = state.section === 'All'
+    ? () => true
+    : (q) => q.section === state.section;
 
-function applyFilter(){
-  const want = state.section;
-  const qs = state.activeTest.questions;
-  state.qIdxMap = [];
-  qs.forEach((q, i) => {
-    const sec = q.section || 'General';
-    if (want === 'All' || sec === want) state.qIdxMap.push(i);
-  });
-  state.idx = 0; // reset to first in filtered list
+  const prevIndex = state.idx;                // try keep current q if still visible
+  state.sectionIndexMap = [];
+  list.forEach((q, i) => { if (keep(q)) state.sectionIndexMap.push(i); });
+
+  // realign current index into the map (or jump to first in map)
+  if (!state.sectionIndexMap.length) { state.idx = 0; return; }
+  const pos = state.sectionIndexMap.indexOf(prevIndex);
+  state.idx = pos >= 0 ? prevIndex : state.sectionIndexMap[0];
 }
-
 function renderSectionTabs(){
-  const counts = {};
-  const qs = state.activeTest.questions;
-  state.sections.forEach(s => counts[s]=0);
-  qs.forEach(q => {
-    const sec = q.section || 'General';
-    counts[sec] = (counts[sec]||0)+1;
-    counts['All'] = (counts['All']||0)+1;
-  });
-
+  const list = state.activeTest.questions;
+  const sections = getAllSections(list);
   sectionTabs.innerHTML = '';
-  state.sections.forEach(sec => {
+  sections.forEach(name => {
+    const count = name === 'All'
+      ? list.length
+      : list.filter(q => q.section === name).length;
+
     const b = document.createElement('button');
-    b.className = 'tab' + (sec===state.section?' active':'');
-    b.innerHTML = `${sec}<span class="count">(${counts[sec]||0})</span>`;
-    b.onclick = () => { state.section = sec; applyFilter(); renderQuestion(); renderPalette(); renderSectionTabs(); };
+    b.className = 'tab' + (state.section === name ? ' active' : '');
+    b.textContent = `${name} (${count})`;
+    b.onclick = () => {
+      state.section = name;
+      buildSectionIndexMap();
+      renderPalette();
+      renderQuestion();
+      renderSectionTabs();
+    };
     sectionTabs.appendChild(b);
   });
+
+  // small counter badge (optional)
+  const badge = document.createElement('span');
+  badge.className = 'badge sec';
+  const pos = state.sectionIndexMap.indexOf(state.idx);
+  badge.textContent = `Showing ${pos+1} / ${state.sectionIndexMap.length}`;
+  sectionTabs.appendChild(badge);
 }
 
-/* ====== Start test ====== */
+/* ========= Test lifecycle ========= */
 function startTest(t) {
   state.activeTest = t;
+  state.idx = 0;
   state.answers = {};
   state.review = {};
+  state.section = 'All';
   state.startTs = Date.now();
   state.endTs = state.startTs + t.durationMinutes * 60 * 1000;
 
-  // prepare sections
-  buildSections();
-  state.section = 'All';
-  applyFilter();
-
-  testList.style.display='none';
-  resultArea.style.display='none';
-  examArea.style.display='block';
+  testList.style.display = 'none';
+  resultArea.style.display = 'none';
+  examArea.style.display = 'block';
 
   testTitle.textContent = t.title;
-  info.innerHTML = `<p><b>Negative Marking:</b> -${t.negative}</p><p><b>Marks / correct:</b> 1 (or per question)</p>`;
+  info.innerHTML = `<p><b>Negative Marking:</b> -${t.negative}</p>
+                    <p><b>Marks / correct:</b> 1 (or per question)</p>`;
+
   tickTimer();
+  clearInterval(state.timer);
   state.timer = setInterval(tickTimer, 1000);
-  renderSectionTabs();
+
+  buildSectionIndexMap();    // NEW
+  renderSectionTabs();       // NEW
   renderQuestion();
   renderPalette();
 }
 
-/* ====== Timer ====== */
 function tickTimer(){
-  if(!state.activeTest) return;
+  if (!state.activeTest) return;
   const left = Math.max(0, Math.floor((state.endTs - Date.now())/1000));
   timerEl.textContent = fmtHMS(left);
-  remain.textContent = fmtHMS(left);
-  if(left===0){ submitTest(); }
+  remain.textContent  = fmtHMS(left);
+  if (left === 0) submitTest();
 }
 
-/* ====== Rendering ====== */
-function currentIndexOriginal(){ return state.qIdxMap[state.idx] }
-function currentQuestion(){ return getQ(currentIndexOriginal()); }
+function currentQuestion(){ return state.activeTest.questions[state.idx]; }
 
+/* ========= Renderers ========= */
 function renderQuestion(){
   const q = currentQuestion();
-  qHead.textContent = `Q${state.idx+1}.`;
-  // render HTML so <img>, <sup>, etc. work
-  qText.innerHTML = q.text;
+  qHead.textContent = `Q${state.idx+1}.`;      // keep global numbering
+  qText.innerHTML = q.text;                    // allow <img>, <sup>, etc.
 
   optWrap.innerHTML = '';
   q.options.forEach((opt,i)=>{
     const btn = document.createElement('button');
     btn.className = 'opt';
     btn.type = 'button';
-    btn.innerHTML = opt; // allow image options & HTML
-    if(state.answers[q.id] === i) btn.classList.add('selected');
-    btn.onclick = ()=>{ state.answers[q.id]=i; renderQuestion(); renderPalette(); };
+    btn.innerHTML = opt;                       // render option as HTML too
+    if (state.answers[q.id] === i) btn.classList.add('selected');
+    btn.onclick = () => { state.answers[q.id] = i; renderQuestion(); renderPalette(); };
     optWrap.appendChild(btn);
   });
 }
 
 function renderPalette(){
-  palette.innerHTML='';
-  state.qIdxMap.forEach((origIdx, i)=>{
-    const q = getQ(origIdx);
-    const b=document.createElement('button');
+  // Palette shows only questions in current section
+  palette.innerHTML = '';
+  state.sectionIndexMap.forEach((globalIdx) => {
+    const q = state.activeTest.questions[globalIdx];
+    const b = document.createElement('button');
+    b.textContent = globalIdx + 1;             // show global number
     const answered = state.answers[q.id] != null;
-    b.textContent = i+1;
-    if(answered) b.style.background = 'rgba(21,101,192,.15)';
-    if(state.review[q.id]) b.style.outline = '2px solid #f59e0b';
-    b.onclick=()=>{ state.idx=i; renderQuestion(); };
+    if (answered) b.style.background = 'rgba(21,101,192,.15)';
+    if (state.review[q.id]) b.style.outline = '2px solid #f59e0b';
+    b.onclick = () => { state.idx = globalIdx; renderQuestion(); renderSectionTabs(); };
     palette.appendChild(b);
   });
 }
 
-/* ====== Controls ====== */
-$('#prevBtn').onclick = ()=>{ if(state.idx>0){ state.idx--; renderQuestion(); } };
-$('#nextBtn').onclick = ()=>{ if(state.idx < state.qIdxMap.length-1){ state.idx++; renderQuestion(); } };
-$('#clearBtn').onclick = ()=>{ const q=currentQuestion(); delete state.answers[q.id]; renderQuestion(); renderPalette(); };
-$('#markBtn').onclick = ()=>{ const q=currentQuestion(); state.review[q.id]=!state.review[q.id]; renderPalette(); };
-$('#submitBtn').onclick = ()=> submitTest();
+/* ========= Controls ========= */
+$('#prevBtn').onclick = () => {
+  const pos = state.sectionIndexMap.indexOf(state.idx);
+  if (pos > 0) { state.idx = state.sectionIndexMap[pos - 1]; renderQuestion(); renderSectionTabs(); }
+};
+$('#nextBtn').onclick = () => {
+  const pos = state.sectionIndexMap.indexOf(state.idx);
+  if (pos < state.sectionIndexMap.length - 1) {
+    state.idx = state.sectionIndexMap[pos + 1];
+    renderQuestion(); renderSectionTabs();
+  }
+};
+$('#clearBtn').onclick = () => {
+  const q = currentQuestion(); delete state.answers[q.id];
+  renderQuestion(); renderPalette();
+};
+$('#markBtn').onclick = () => {
+  const q = currentQuestion(); state.review[q.id] = !state.review[q.id];
+  renderPalette();
+};
+$('#submitBtn').onclick = () => submitTest();
 
-/* ====== Submit / Result ====== */
+/* ========= Submit / Review / Export ========= */
 function submitTest(){
   clearInterval(state.timer);
   const t = state.activeTest;
   const neg = t.negative || 0;
   let score = 0, correct=0, wrong=0, unattempt=0;
 
-  // score against the whole test (not just filtered)
+  // score across ALL questions, not just filtered
   t.questions.forEach(q=>{
     const a = state.answers[q.id];
-    if(a==null){ unattempt++; return; }
-    if(a === q.answer){ correct++; score += (q.marks||1); }
+    if (a == null) { unattempt++; return; }
+    if (a === q.answer) { correct++; score += (q.marks || 1); }
     else { wrong++; score -= neg; }
   });
 
   const total = t.questions.length;
-  const summary = `
+  $('#resultSummary').innerHTML = `
     <p><b>Score:</b> ${score.toFixed(2)} / ${total}</p>
     <p><b>Correct:</b> ${correct}, <b>Wrong:</b> ${wrong}, <b>Unattempted:</b> ${unattempt}</p>
-    <p><b>Time:</b> ${fmtHMS(Math.floor((Date.now()-state.startTs)/1000))}</p>
-  `;
-  $('#resultSummary').innerHTML = summary;
-  examArea.style.display='none';
-  resultArea.style.display='block';
+    <p><b>Time:</b> ${fmtHMS(Math.floor((Date.now()-state.startTs)/1000))}</p>`;
+  examArea.style.display = 'none';
+  resultArea.style.display = 'block';
 }
 
-$('#reviewBtn').onclick = ()=>{
+$('#reviewBtn').onclick = () => {
   state.idx = 0;
-  examArea.style.display='block';
-  resultArea.style.display='none';
+  examArea.style.display = 'block';
+  resultArea.style.display = 'none';
   renderQuestion();
   renderPalette();
 };
@@ -298,7 +328,6 @@ $('#reviewBtn').onclick = ()=>{
 $('#exportBtn').onclick = ()=>{
   const payload = {
     test: state.activeTest?.id,
-    section: state.section,
     answers: state.answers,
     review: state.review,
     ts: new Date().toISOString()
@@ -309,22 +338,24 @@ $('#exportBtn').onclick = ()=>{
   a.href=url; a.download='exam_result.json'; a.click(); URL.revokeObjectURL(url);
 };
 
-/* ====== Test list ====== */
+/* ========= Test list ========= */
 function renderTestList(){
-  testsEl.innerHTML='';
+  testsEl.innerHTML = '';
   state.tests.forEach(t=>{
-    const b=document.createElement('button');
-    b.className='opt';
+    const b = document.createElement('button');
+    b.className = 'opt';
     b.innerHTML = `<div><b>${t.title}</b><div class="muted">${t.durationMinutes} min — ${t.questions.length} Q</div></div>`;
-    b.onclick=()=>startTest(t);
+    b.onclick = () => startTest(t);
     testsEl.appendChild(b);
   });
 }
 
+/* ========= Boot ========= */
 loadQuestions();
-
-// Register SW (PWA)
-if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js')); }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
 </script>
+
 </body>
 </html>
