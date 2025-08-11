@@ -1,10 +1,10 @@
 {
   "tests": [
     {
-      "id": "demo1",
-      "title": "Demo Test 1 (General)",
-      "durationMinutes": 30,
-      "negative": 0.25,
+      "id": "Survey1",
+      "title": "Eng Surveying ",
+      "durationMinutes": 180,
+      "negative": 0.33,
       "questions": [
         {
           "section": "Theory",
