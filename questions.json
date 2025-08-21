@@ -309,7 +309,7 @@
 {
   "section": "Monu",
 
-  "text": "<img src='images/Vu_m.png' alt='beam diagram' style='max-width:100%; height:auto;'>",
+  "text": "gfddreff<img src='images/Vu_m.png' alt='beam diagram' style='max-width:100%; height:auto;'>",
   "options": ["a", "b", "c", "d"],
   "answer": 1
 }
