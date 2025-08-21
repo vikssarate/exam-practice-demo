@@ -296,7 +296,7 @@
 },
   {
   "section": "Diagram-Curve",
-  "text": "For the simply supported beam with point load W at midspan over span L shown, what is the maximum bending moment?",
+  "text": "Fbending moment?",
   "image": "images/Vu_m.png",
   "options": [
     "a",
